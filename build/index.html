@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Dash Platform User</title>
+
+  <script src="https://unpkg.com/dash@3.13.2/dist/dash.min.js"></script>
+  <script src="dash-platform-user-lib.js" type="text/javascript"></script>
+
+  <script>
+    (async () => {
+    try {
+        const client = new Dash.Client({
+            network: 'testnet',
+        });
+        //pass connection to DashPlaformUser#find() factory method
+        const options1 = { client: client}; //, returnType: DashPlatformUser.returnTypes.JSON };
+
+        const options2 = {
+            connection_options:
+                { network: 'testnet', }
+        };
+
+
+        const foundUser = await DashPlatformUser.find('bob', options1);
+        console.dir(foundUser);
+        //const user = await client.platform.names.get('bob');
+        //console.dir({user}, {depth:5})
+    }
+    catch (e) {
+        console.log(`error: ${e}`);
+    }
+}
+)()
+
+  </script>
+</head>
+
+<body>
+  <div id="test">
+  </div>
+</body>
+
+</html>
