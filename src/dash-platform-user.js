@@ -7,6 +7,124 @@ const DPNSDocument = require('./dataDocument.model.js');
 /**
  * DashPlatformUser class - represents a registered Dash Platform Username
  * @class DashPlatformUser
+ * 
+ * 
+ * @example 
+    const Dash = require("dash");
+    const DashPlatformUser = require("dash-platform-user");
+    const DashSecureMessage = require("dash-secure-message");
+
+    (async () => {
+        try {
+
+            //test data for retriveing private keys (subject to change)
+            const aliceMnemonic = 'shoe utility void sauce grocery tourist upon dress else deliver boy theory';
+            const bobMnemonic = 'fantasy normal viable flock chief ancient crunch member cross air charge lunch';
+
+            // USING QUERY LEVEL (TOP LEVEL) OPTIONS
+
+            // pass an instance of the client
+            const client = new Dash.Client({
+                wallet: { mnemonic: aliceMnemonic }
+            });
+
+            const options1 = { client: client, returnType: DashPlatformUser.returnTypes.JSON };
+
+            //pass connection parameter options
+            const options2 = {
+                connection_options:
+                    { network: 'testnet', }
+            };
+
+            //pass a mnemonic to retrieve private key
+            const options3 = {
+                connection_options:
+                    { wallet: { mnemonic: aliceMnemonic } }
+                //client: client, returnType: DashPlatformUser.returnTypes.JSON 
+            }
+
+
+            // QUERIES WITHOUT QUERY LEVEL (TOP LEVEL) OPTIONS
+            // THE TOP LEVEL OPTIONS ABOVE CAN BE PASSED As A SECOND PARAMETER
+
+            // if setting options.returnPrivateKey:true as a user level option, the wallet.mnemonic must be passed in 
+            // either the client instance or as connection_options.mnemonic
+
+            // - * dashjs is required as an external dependency if client instance is not passed as a top level option * 
+            // - create internal client connection (to testnet) using default seeds, apps & other options
+            // - outputs user result as returnType: Object (DashPlatformUser.returnTypes.OBJECT) 
+
+            let foundUser = '';
+
+            //UNCOMMENT EXAMPLES TO TEST
+
+            // Different Query Types (No options)
+            // Single user as string
+            foundUser = await DashPlatformUser.findByName('bob');
+
+            // Single user as object (with user level options)
+            //foundUser = await DashPlatformUser.findByName({name:'alice', { returnPrivateKey: false });
+
+            // Array of string queries
+            //foundUser = await DashPlatformUser.findByName(['bob','alice']);
+
+            // Array of Object queries 
+            //foundUser = await DashPlatformUser.findByName([{name:'alice', options:{ returnPrivateKey: false }}, {name:'bob',options: { returnPrivateKey: false }}]);
+
+            // Single user string passed as an array
+            //foundUser = await DashPlatformUser.findByName('bob');
+
+            // Array of mixed String and Object queries 
+            //foundUser = await DashPlatformUser.findByName([{ name: 'alice', options: { returnPrivateKey: true } }, 'bob', 'nob'], options3);
+
+            //user doesn't exist:
+            //single user
+            //foundUser = await DashPlatformUser.findByName('nob');
+
+            // array of strings with a non-existant user
+            //foundUser = await DashPlatformUser.findByName(['bob', 'nob']);
+
+            console.dir(foundUser);
+
+            //ENCRYPTION EXAMPLE USING Dash Secure Message Library
+
+            const msg = "test"
+            let keys = {};
+
+            const senderGetsKeys = await DashPlatformUser.findByName([{ name: 'alice', options: { returnPrivateKey: true } }, 'bob'],
+                { connection_options: { wallet: { mnemonic: aliceMnemonic } } });
+
+            senderGetsKeys.map(u => {
+                if (u.query == 'alice') keys.senderKey = u.results.privateKey;
+                if (u.query == 'bob') keys.recipientKey = u.results.publicKey;
+            })
+
+            console.dir(JSON.stringify(keys));
+
+            const encrypted = DashSecureMessage.encrypt(keys.senderKey, msg, keys.recipientKey);
+
+            console.log('encrypted message:', encrypted)
+
+            const recipientGetsKeys = await DashPlatformUser.findByName([{ name: 'bob', options: { returnPrivateKey: true } }, 'alice'],
+                { connection_options: { wallet: { mnemonic: bobMnemonic } } });
+
+            recipientGetsKeys.map(u => {
+                if (u.query == 'bob') keys.recipientKey = u.results.privateKey;
+                if (u.query == 'alice') keys.senderKey = u.results.publicKey;
+            })
+
+            console.dir(JSON.stringify(keys));
+
+            const decrypted = DashSecureMessage.decrypt(keys.recipientKey, encrypted, keys.senderKey);
+            console.log('decrypted message:', decrypted)
+
+        }
+        catch (e) {
+            console.log(`error: ${e}`);
+        }
+    }
+    )()
+
  * @property {string} id Unique id fopr the user record - the id of the DPNS document which registered the name
  * @property {string} name The registered username
  * @property {string} identityId identityId  associated with the username
@@ -24,8 +142,8 @@ module.exports = class DashPlatformUser {
     }
     /**
      * Finds the registered username on the network
-     * @static DashPlatformUser#find
-     * @param {string|Object|Array<{string}|{Object}>} nameToFind Either:
+     * @static DashPlatformUser#findByName
+     * @param {string|Object|Array<{string}|{Object}>} query Either:
      * For a single user query,either
      * - a single string containing a username, or
      * - an single object with properties of `name` and `options` to apply to the query for that user
@@ -34,7 +152,7 @@ module.exports = class DashPlatformUser {
      * @param {Object} options Optional dashjs client. If the object is not passed it will be constructed by the function.
      * 
      */
-    static async find(nameToFind, options) {
+    static async findByName(query, options) {
         /* options:
             @param  {(0|1|2)} returnType
         */
@@ -47,12 +165,7 @@ module.exports = class DashPlatformUser {
             debug(`options now: ${options}`);
 
 
-            /*
-            if(!returnType){
-                debug(`returnType was not passed as a parameter`); 
-                throw new Error('enum parameter returnType is required.');
-            }
-            */
+
             const returnType = options.returnType || this.returnTypes.OBJECT;
 
             //options.returnAllRecords
@@ -66,31 +179,12 @@ module.exports = class DashPlatformUser {
 
             const returnAllRecords = options.returnAllRecords || false;
 
-            /*
-            if (!nameToFind) {
-                debug(`nameToFind was not passed as a parameter`);
-                throw new Error('parameter nameToFind is required. Please supply a username to find');
-            }
-             debug(`Searching for username: ${nameToFind}`);
-            */
 
-
-            //if the connection object hasn't been passed, then create one
-            /*
-            if (!client) {
-                debug(`client is undefined, createing new client`);
-                //client = new DashConnection('test')
-
-            }
-            */
             const connOptions = options.connection_options || {};
 
-
-            //TODO : wallet for mnemonic
             const client = options.client ||
                 new DashConnection(connOptions).client
 
-            //const client = connection.client;
             debug(`client: ${client}`);
             debug(`Client is ready...`);
 
@@ -112,19 +206,19 @@ module.exports = class DashPlatformUser {
             // array to store queries which are objects (have options)
             let arrUsersWithOptions = [];
 
-            switch (typeof nameToFind) {
+            switch (typeof query) {
                 case 'string':
                     //single string
-                    arrQuery.push(nameToFind)
+                    arrQuery.push(query)
                     break;
                 case 'object':
-                    if (Array.isArray(nameToFind)) {
+                    if (Array.isArray(query)) {
                         multiUserQuery = true
                         //?? if the user passes in an array they get array back even if a single element
                         //if (arrQuery.length > 1) multiUserQuery = true;
 
                         //map array to pull out strings and objects with options
-                        arrQuery = nameToFind.map(n => {
+                        arrQuery = query.map(n => {
                             if (typeof n == 'object') {
                                 //and push to array of queries with options
                                 arrUsersWithOptions.push(n);
@@ -140,8 +234,8 @@ module.exports = class DashPlatformUser {
                     }
                     else {
                         //single object - push name to arrQuery
-                        arrQuery.push(nameToFind.name);
-                        arrUsersWithOptions.push(nameToFind);
+                        arrQuery.push(query.name);
+                        arrUsersWithOptions.push(query);
                     }
                     break;
 
@@ -175,7 +269,7 @@ module.exports = class DashPlatformUser {
                 {
                     where: [
                         ['normalizedParentDomainName', '==', 'dash'],
-                        //['normalizedLabel', '==', nameToFind.toLowerCase()],
+                        //['normalizedLabel', '==', query.toLowerCase()],
                         ['normalizedLabel', 'in', arrQuery],
                         // TODO: ORDER BY REGISTRATION DATE - not currently possible 
                         // Refactor if/when document transfer becomes available
@@ -385,11 +479,11 @@ module.exports = class DashPlatformUser {
 * @enum {number}
 * 
 *//**
-                                        * Enum for returnType
-                                        * @readonly
-                                        * @enum {number}
-                                        * 
-                                        */
+                                            * Enum for returnType
+                                            * @readonly
+                                            * @enum {number}
+                                            * 
+                                            */
     static returnTypes = {
         /** return as a plain object */
         OBJECT: 0,
