@@ -313,7 +313,7 @@ module.exports = class DashPlatformUser {
                         let foundUser = new this();
                         foundUser.name = aq;
                         foundUser.id = r._id;
-                        foundUser.identityId = r._data.data.records.dashIdentity;
+                        foundUser.identityId = r._data.data.records.dashUniqueIdentityId;
 
                         //get public key (async)
                         debug(`Fetching Identity record for id ${foundUser.identityId}`);
