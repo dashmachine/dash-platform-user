@@ -35,7 +35,9 @@ module.exports = class DashConnection {
     this._seeds = options.seeds;
     this._optionBuilder.seeds = this._seeds;
       */
-    this._network = options.network || 'testnet';
+    debug(`CURRENT options.network : ${options.network }`);
+
+    this._network = options.network || 'evonet';
     this._optionBuilder = options || {};
     this._optionBuilder.network = this._network;
 

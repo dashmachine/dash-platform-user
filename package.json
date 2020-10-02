@@ -1,6 +1,6 @@
 {
   "name": "dash-platform-user",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "library for retrieving Dash Platform users and their properties",
   "main": "src/dash-platform-user.js",
   "scripts": {
@@ -40,6 +40,6 @@
   "dependencies": {
     "@babel/plugin-transform-runtime": "^7.9.6",
     "@babel/runtime": "^7.9.6",
-    "dash": "^3.13.2"
+    "dash": "^3.15.2"
   }
 }
