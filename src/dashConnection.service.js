@@ -21,7 +21,7 @@ module.exports = class DashConnection {
   //constructor(network, mnemonic, apps, seeds) {
   constructor(options) {
     debug(`Creating new connection`);
-    console.log(`Creating new connection`);
+    //console.log(`Creating new connection`);
     /*
     this._optionBuilder = {};
     this._network = options.network || 'testnet';

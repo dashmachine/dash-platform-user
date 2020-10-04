@@ -1,6 +1,6 @@
 {
   "name": "dash-platform-user",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "library for retrieving Dash Platform users and their properties",
   "main": "src/dash-platform-user.js",
   "scripts": {

@@ -185,10 +185,10 @@ module.exports = class DashPlatformUser {
             const client = options.client ||
                 new DashConnection(connOptions).client
 
-            debug(`client: ${client}`);
+            //debug(`client: ${client}`);
             debug(`Client is ready...`);
 
-            console.dir(client);
+            //console.dir(client);
 
             let clientHasMnemonic = false;
 
