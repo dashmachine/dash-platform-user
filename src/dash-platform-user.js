@@ -321,7 +321,9 @@ module.exports = class DashPlatformUser {
                             foundUser.identityId,
                         );
                         debug(`Found identity ${JSON.stringify(foundUser.identity)}`);
-                        foundUser.publicKey = foundUser.identity.publicKeys[0].data;
+                        foundUser.publicKeyBinary = foundUser.identity.publicKeys[0].data;
+                        debug(`User public key binary ${foundUser.publicKeyBinary}`);
+                        foundUser.publicKey = foundUser.publicKeyBinary.toString('base64');
                         debug(`User public key ${foundUser.publicKey}`);
 
                         //? returnPublicKey for this user
@@ -335,7 +337,8 @@ module.exports = class DashPlatformUser {
 
                             client.account = await client.wallet.getAccount({ index: 0 });
                             foundUser.privateKey = client.account.getIdentityHDKeyByIndex(0, 0).privateKey.toString();
-                            debug(`user PrivateKey: ${foundUser.privateKey}`)
+                            debug(`user privateKey: ${foundUser.privateKey}`)
+
 
                         }
 
@@ -460,6 +463,19 @@ module.exports = class DashPlatformUser {
         }
     }
 
+    get publicKeyBinary() {
+        return this._publicKeyBinary;
+    }
+
+    /**
+     * @param {Uint8Array} newPublicKeyBinary
+     */
+    set publicKeyBinary(newPublicKeyBinary) {
+        if (newPublicKeyBinary) {
+            this._publicKeyBinary = newPublicKeyBinary;
+        }
+    }
+
     get privateKey() {
         return this._privateKey;
     }
@@ -472,6 +488,7 @@ module.exports = class DashPlatformUser {
             this._privateKey = newPrivateKey;
         }
     }
+
 
     /**
 * Enum for returnType
@@ -516,7 +533,8 @@ function toObject(instance) {
         id: instance._id,
         identityId: instance._identityId,
         identity: instance._identity,
-        publicKey: instance._publicKey
+        publicKey: instance._publicKey,
+        publicKeyBinary: instance._publicKeyBinary
     };
     if (typeof instance._privateKey != typeof undefined) obj.privateKey = instance._privateKey;
     return obj
